@@ -487,21 +487,21 @@ body > .shell > nav:first-child { display: none !important; }
       <em>Undergraduate and professional</em>
     </a>
     <nav class="uni-report-shell-reports" aria-label="Country reports">
-      <a href="../">Overview</a>
-<a href="../china/">China</a>
-<a href="./" aria-current="page">U.S.</a>
-<a href="../vietnam/">Vietnam</a>
-<a href="../korea/">Korea</a>
-<a href="../taiwan/">Taiwan</a>
+      <a href="../" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/">Overview</a>
+<a href="../china/" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/china/">China</a>
+<a href="./" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/usa/" aria-current="page">U.S.</a>
+<a href="../vietnam/" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/vietnam/">Vietnam</a>
+<a href="../korea/" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/korea/">Korea</a>
+<a href="../taiwan/" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/taiwan/">Taiwan</a>
     </nav>
     <nav class="uni-report-shell-sections" aria-label="On this page">
       <span class="uni-report-shell-caption">On this page</span>
-      <ol><li><a href="#medical-pool" class="on">Medical applicant pool</a></li>
-<li><a href="#top-100">Top 100 applications</a></li>
-<li><a href="#top-10">Top 10 applications</a></li>
-<li><a href="#rank-boundary">Rank 1,223 boundary</a></li>
-<li><a href="#measured-top">Measured top ten</a></li>
-<li><a href="#unscored">Unscored estimates</a></li></ol>
+      <ol><li><a href="#usa-medical-pool" class="on">Medical applicant pool</a></li>
+<li><a href="#usa-top-100">Top 100 applications</a></li>
+<li><a href="#usa-top-10">Top 10 applications</a></li>
+<li><a href="#usa-rank-boundary">Rank 1,223 boundary</a></li>
+<li><a href="#usa-measured-top">Measured top ten</a></li>
+<li><a href="#usa-unscored">Unscored estimates</a></li></ol>
     </nav>
     <button class="uni-report-shell-theme" type="button">
       <span data-theme-label>Dark theme</span>
@@ -522,13 +522,13 @@ body > .shell > nav:first-child { display: none !important; }
 
   <div class="tiles" id="tiles"></div>
 
-  <section id="medical-pool">
+  <section id="usa-medical-pool">
     <h2>Where medical-school applicants sit in the age cohort</h2>
     <div class="chart" id="medical"></div>
     <div class="quantile-strip" id="medical-quantiles"></div>
   </section>
 
-  <section id="top-100">
+  <section id="usa-top-100">
     <h2>Top 100: submissions fell below the entering class in 2021</h2>
     <p class="note">
       Both lines cover the top-100 schools reporting submitters that year — 93 to 100 of them,
@@ -548,7 +548,7 @@ body > .shell > nav:first-child { display: none !important; }
     </details>
   </section>
 
-  <section id="top-10">
+  <section id="usa-top-10">
     <h2>Top 10: the remainder is a 2021 event, not a trend</h2>
     <p class="note">
       Six straight years under 25 students, then 1,952. Averaging 2014–2023 folds that cliff
@@ -563,7 +563,7 @@ body > .shell > nav:first-child { display: none !important; }
     </details>
   </section>
 
-  <section id="rank-boundary">
+  <section id="usa-rank-boundary">
     <h2>For context: every blank sits below rank 1,223</h2>
     <p class="note">
       Share of each rank band with no submitter count in any of the ten years. Of the 899
@@ -573,7 +573,7 @@ body > .shell > nav:first-child { display: none !important; }
     <div class="chart" id="bands"></div>
   </section>
 
-  <section id="measured-top">
+  <section id="usa-measured-top">
     <h2>The top ten are measured, not estimated</h2>
     <p class="note">
       Caltech is the one to watch: it went test-blind, stopped reporting after 2020, and its
@@ -583,7 +583,7 @@ body > .shell > nav:first-child { display: none !important; }
     <div class="scroller"><table id="top-table"></table></div>
   </section>
 
-  <section id="unscored">
+  <section id="usa-unscored">
     <h2>Nine schools in the top 100 estimate over a quarter unscored</h2>
     <p class="note">
       The pattern is sparse reporting, not admissions philosophy. Trinity and Connecticut
@@ -872,6 +872,12 @@ tables();
   const themeLabel = shell.querySelector("[data-theme-label]");
   const menuButton = shell.querySelector(".uni-report-shell-menu");
   const nativeThemeButton = document.querySelector("body > .shell > nav #theme");
+
+  if (location.protocol === "file:") {
+    shell.querySelectorAll(".uni-report-shell-reports a[data-local-href]").forEach((link) => {
+      link.href = link.dataset.localHref;
+    });
+  }
 
   function remember(theme) {
     try { localStorage.setItem("uni-report-theme", theme); } catch (_) {}

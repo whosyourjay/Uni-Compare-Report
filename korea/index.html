@@ -381,20 +381,20 @@ body > .shell > nav:first-child { display: none !important; }
       <em>Route-weighted estimates</em>
     </a>
     <nav class="uni-report-shell-reports" aria-label="Country reports">
-      <a href="../">Overview</a>
-<a href="../china/">China</a>
-<a href="../usa/">U.S.</a>
-<a href="../vietnam/">Vietnam</a>
-<a href="./" aria-current="page">Korea</a>
-<a href="../taiwan/">Taiwan</a>
+      <a href="../" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/">Overview</a>
+<a href="../china/" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/china/">China</a>
+<a href="../usa/" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/usa/">U.S.</a>
+<a href="../vietnam/" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/vietnam/">Vietnam</a>
+<a href="./" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/korea/" aria-current="page">Korea</a>
+<a href="../taiwan/" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/taiwan/">Taiwan</a>
     </nav>
     <nav class="uni-report-shell-sections" aria-label="On this page">
       <span class="uni-report-shell-caption">On this page</span>
-      <ol><li><a href="#universities" class="on">University ability</a></li>
-<li><a href="#csat">Overall versus CSAT</a></li>
-<li><a href="#coverage">National route coverage</a></li>
-<li><a href="#programs">Programs inside a school</a></li>
-<li><a href="#floors">School-record CSAT floors</a></li></ol>
+      <ol><li><a href="#korea-universities" class="on">University ability</a></li>
+<li><a href="#korea-csat">Overall versus CSAT</a></li>
+<li><a href="#korea-coverage">National route coverage</a></li>
+<li><a href="#korea-programs">Programs inside a school</a></li>
+<li><a href="#korea-floors">School-record CSAT floors</a></li></ol>
     </nav>
     <button class="uni-report-shell-theme" type="button">
       <span data-theme-label>Dark theme</span>
@@ -409,7 +409,7 @@ body > .shell > nav:first-child { display: none !important; }
     <div id="metrics" class="metrics"></div>
   </header>
 
-  <section id="universities">
+  <section id="korea-universities">
     <div class="section-top">
       <div>
         <h2>University ability and route mix</h2>
@@ -421,7 +421,7 @@ body > .shell > nav:first-child { display: none !important; }
     <div id="university-ranking"></div>
   </section>
 
-  <section id="csat">
+  <section id="korea-csat">
     <div class="section-top">
       <div>
         <h2>Overall estimate versus direct CSAT</h2>
@@ -432,7 +432,7 @@ body > .shell > nav:first-child { display: none !important; }
     <p class="footnote">Circle area follows pooled reported seats. Direct-CSAT coverage differs sharply by university, so this chart does not treat the two estimates as interchangeable.</p>
   </section>
 
-  <section id="coverage">
+  <section id="korea-coverage">
     <div class="section-top">
       <div>
         <h2>National route coverage</h2>
@@ -442,7 +442,7 @@ body > .shell > nav:first-child { display: none !important; }
     <div id="coverage"></div>
   </section>
 
-  <section id="programs">
+  <section id="korea-programs">
     <div class="section-top">
       <div>
         <h2>Program spread inside one university</h2>
@@ -453,7 +453,7 @@ body > .shell > nav:first-child { display: none !important; }
     <div id="program-spread" class="chart"></div>
   </section>
 
-  <section id="floors">
+  <section id="korea-floors">
     <div class="section-top">
       <div>
         <h2>School-record CSAT-floor audit</h2>
@@ -668,6 +668,12 @@ main();
   const themeLabel = shell.querySelector("[data-theme-label]");
   const menuButton = shell.querySelector(".uni-report-shell-menu");
   const nativeThemeButton = document.querySelector("body > .shell > nav #theme");
+
+  if (location.protocol === "file:") {
+    shell.querySelectorAll(".uni-report-shell-reports a[data-local-href]").forEach((link) => {
+      link.href = link.dataset.localHref;
+    });
+  }
 
   function remember(theme) {
     try { localStorage.setItem("uni-report-theme", theme); } catch (_) {}

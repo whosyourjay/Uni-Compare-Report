@@ -526,12 +526,12 @@ body > .shell > nav:first-child { display: none !important; }
       <em>Seats, routes, cutoffs</em>
     </a>
     <nav class="uni-report-shell-reports" aria-label="Country reports">
-      <a href="../">Overview</a>
-<a href="../china/">China</a>
-<a href="../usa/">U.S.</a>
-<a href="./" aria-current="page">Vietnam</a>
-<a href="../korea/">Korea</a>
-<a href="../taiwan/">Taiwan</a>
+      <a href="../" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/">Overview</a>
+<a href="../china/" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/china/">China</a>
+<a href="../usa/" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/usa/">U.S.</a>
+<a href="./" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/vietnam/" aria-current="page">Vietnam</a>
+<a href="../korea/" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/korea/">Korea</a>
+<a href="../taiwan/" data-local-href="https://whosyourjay.github.io/Uni-Compare-Report/taiwan/">Taiwan</a>
     </nav>
     <nav class="uni-report-shell-sections" aria-label="On this page">
       <span class="uni-report-shell-caption">On this page</span>
@@ -1157,6 +1157,12 @@ setupPage();
   const themeLabel = shell.querySelector("[data-theme-label]");
   const menuButton = shell.querySelector(".uni-report-shell-menu");
   const nativeThemeButton = document.querySelector("body > .shell > nav #theme");
+
+  if (location.protocol === "file:") {
+    shell.querySelectorAll(".uni-report-shell-reports a[data-local-href]").forEach((link) => {
+      link.href = link.dataset.localHref;
+    });
+  }
 
   function remember(theme) {
     try { localStorage.setItem("uni-report-theme", theme); } catch (_) {}
