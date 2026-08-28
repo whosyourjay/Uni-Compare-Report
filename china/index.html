@@ -319,54 +319,331 @@ table.worked tr.lit td { font-weight: 600; color: var(--ink);
 .notes .han { font-family: var(--han); color: var(--ink); }
 .notes a { color: var(--accent); text-underline-offset: 2px; }
 </style>
-<style id="uni-report-switcher-style">
-.uni-report-switcher {
-  position: fixed; top: 14px; right: 16px; z-index: 2147483647;
-  color: #17202a; font: 600 13px/1.25 -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif; text-align: left;
+<script id="uni-report-shell-boot">
+(() => {
+  let theme = "";
+  try { theme = localStorage.getItem("uni-report-theme") || ""; } catch (_) {}
+  if (theme !== "dark" && theme !== "light") {
+    theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark" : "light";
+  }
+  document.documentElement.dataset.theme = theme;
+})();
+</script>
+<style id="uni-report-shell-style">
+:root {
+  color-scheme: light;
+  --suite-paper: #f1f3f6;
+  --suite-card: #ffffff;
+  --suite-ink: #171a20;
+  --suite-mid: #58616f;
+  --suite-faint: #8a94a3;
+  --suite-rule: #d9dee6;
+  --suite-accent: #c23b22;
+  --suite-shadow: rgba(23, 26, 32, .12);
 }
-.uni-report-switcher, .uni-report-switcher * { box-sizing: border-box; }
-.uni-report-switcher summary {
-  display: flex; align-items: center; gap: 7px; min-height: 36px;
-  padding: 8px 12px; list-style: none; cursor: pointer; user-select: none;
-  color: #17202a; background: rgba(255, 255, 255, .94);
-  border: 1px solid rgba(23, 32, 42, .18); border-radius: 999px;
-  box-shadow: 0 3px 14px rgba(23, 32, 42, .12);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --suite-paper: #0d1117;
+  --suite-card: #161b22;
+  --suite-ink: #e6edf3;
+  --suite-mid: #a2adba;
+  --suite-faint: #778391;
+  --suite-rule: #2b333d;
+  --suite-accent: #f06a4b;
+  --suite-shadow: rgba(0, 0, 0, .34);
+  --paper: #0d1117;
+  --page: #0d1117;
+  --card: #161b22;
+  --ink: #e6edf3;
+  --mid: #a2adba;
+  --muted: #a2adba;
+  --faint: #778391;
+  --ink-2: #a2adba;
+  --ink-3: #778391;
+  --rule: #2b333d;
+  --line: #2b333d;
+  --grid: #252c35;
+  --wash: #1d242d;
+  --missing: #303945;
 }
-.uni-report-switcher summary::-webkit-details-marker { display: none; }
-.uni-report-switcher summary::before { content: "◎"; color: #617181; font-size: 15px; }
-.uni-report-switcher[open] summary { border-radius: 12px 12px 0 0; }
-.uni-report-switcher-menu {
-  position: absolute; top: calc(100% - 1px); right: 0; width: 184px;
-  overflow: hidden; padding: 6px; background: rgba(255, 255, 255, .97);
-  border: 1px solid rgba(23, 32, 42, .18); border-radius: 12px 0 12px 12px;
-  box-shadow: 0 10px 28px rgba(23, 32, 42, .16);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+:root[data-theme="light"] {
+  color-scheme: light;
+  --paper: #f1f3f6;
+  --page: #f1f3f6;
+  --card: #ffffff;
+  --ink: #171a20;
+  --mid: #58616f;
+  --muted: #687483;
+  --faint: #8a94a3;
+  --ink-2: #58616f;
+  --ink-3: #7b8795;
+  --rule: #d9dee6;
+  --line: #d9dee6;
+  --grid: #e7ebf0;
+  --wash: #f3f5f7;
+  --missing: #d5dbe2;
 }
-.uni-report-switcher-menu a {
-  display: block; padding: 8px 10px; color: #334452 !important;
-  border-radius: 7px; text-decoration: none !important; font-weight: 500;
+html { scroll-behavior: smooth; }
+body {
+  padding-left: 232px !important;
+  background: var(--paper, var(--page, var(--suite-paper))) !important;
+  color: var(--ink, var(--suite-ink));
 }
-.uni-report-switcher-menu a:hover { background: #eef2f5; color: #17202a !important; }
-.uni-report-switcher-menu a[aria-current="page"] {
-  color: #fff !important; background: #17202a; font-weight: 700;
+body > .shell {
+  display: block !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  max-width: 1180px !important;
 }
-@media print { .uni-report-switcher { display: none !important; } }
+body > .shell > nav:first-child { display: none !important; }
+
+.uni-report-shell, .uni-report-shell * { box-sizing: border-box; }
+.uni-report-shell {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 2147483000;
+  width: 220px;
+  color: var(--suite-ink);
+  font: 500 13px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.uni-report-shell-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 27px 20px 20px;
+  background: var(--suite-card);
+  border-right: 1px solid var(--suite-rule);
+}
+.uni-report-shell-brand {
+  display: block;
+  padding: 0 2px 19px;
+  color: var(--suite-ink) !important;
+  text-decoration: none !important;
+}
+.uni-report-shell-brand span,
+.uni-report-shell-caption {
+  display: block;
+  color: var(--suite-faint);
+  font: 700 10px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.uni-report-shell-brand strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--suite-ink);
+  font: 700 23px/1.08 Georgia, "Times New Roman", serif;
+  letter-spacing: -.025em;
+}
+.uni-report-shell-brand em {
+  display: block;
+  margin-top: 6px;
+  color: var(--suite-mid);
+  font-style: normal;
+  font-size: 12px;
+}
+.uni-report-shell nav { width: auto; }
+.uni-report-shell-reports {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 13px 0 17px;
+  border-top: 1px solid var(--suite-rule);
+  border-bottom: 1px solid var(--suite-rule);
+}
+.uni-report-shell-reports a {
+  overflow: hidden;
+  padding: 6px 7px;
+  color: var(--suite-mid) !important;
+  border-radius: 5px;
+  text-decoration: none !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.uni-report-shell-reports a:hover { color: var(--suite-ink) !important; background: var(--suite-paper); }
+.uni-report-shell-reports a::before {
+  content: none !important;
+  counter-increment: none !important;
+}
+.uni-report-shell-reports a[aria-current="page"] {
+  color: #fff !important;
+  background: var(--suite-accent);
+  font-weight: 750;
+}
+.uni-report-shell-caption { margin: 18px 2px 8px; }
+.uni-report-shell-sections { flex: 1 0 auto; }
+.uni-report-shell-sections ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: suite-section;
+}
+.uni-report-shell-sections li { counter-increment: suite-section; }
+.uni-report-shell-sections a {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 5px;
+  align-items: baseline;
+  padding: 5px 2px;
+  color: var(--suite-mid) !important;
+  text-decoration: none !important;
+}
+.uni-report-shell-sections a::before {
+  content: counter(suite-section, decimal-leading-zero);
+  color: var(--suite-faint);
+  font: 600 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.uni-report-shell-sections a:hover,
+.uni-report-shell-sections a.on {
+  color: var(--suite-ink) !important;
+  background: var(--suite-paper) !important;
+  border-left-color: var(--suite-accent) !important;
+}
+.uni-report-shell-sections a.on::before { color: var(--suite-accent) !important; }
+.uni-report-shell-theme {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 16px;
+  padding: 9px 10px;
+  color: var(--suite-mid);
+  background: transparent;
+  border: 1px solid var(--suite-rule);
+  border-radius: 7px;
+  font: inherit;
+  cursor: pointer;
+}
+.uni-report-shell-theme:hover { color: var(--suite-ink); background: var(--suite-paper); }
+.uni-report-shell-theme-icon {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+}
+.uni-report-shell-mobile { display: none; }
+
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] input {
+  color: var(--suite-ink);
+  background: #11161d;
+  border-color: var(--suite-rule);
+}
+:root[data-theme="dark"] .rank-row:nth-child(even) { background: #11161d; }
+:root[data-theme="dark"] .axis { stroke: #596574; }
+:root[data-theme="dark"] .grid { stroke: var(--grid); }
+:root[data-theme="dark"] .tick,
+:root[data-theme="dark"] .plot-label { fill: var(--suite-mid); }
+:root[data-theme="dark"] .point { stroke: var(--suite-card); }
+
+@media (max-width: 860px) {
+  body { padding-left: 0 !important; padding-top: 54px !important; }
+  body > .shell { padding-top: 22px !important; }
+  .uni-report-shell { inset: 0 0 auto; width: auto; height: 54px; }
+  .uni-report-shell-mobile {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 54px;
+    padding: 0 14px 0 17px;
+    background: color-mix(in srgb, var(--suite-card) 94%, transparent);
+    border-bottom: 1px solid var(--suite-rule);
+    box-shadow: 0 3px 15px var(--suite-shadow);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .uni-report-shell-mobile a {
+    color: var(--suite-ink) !important;
+    font: 700 16px/1 Georgia, "Times New Roman", serif;
+    text-decoration: none !important;
+  }
+  .uni-report-shell-menu {
+    padding: 7px 10px;
+    color: var(--suite-mid);
+    background: transparent;
+    border: 1px solid var(--suite-rule);
+    border-radius: 999px;
+    font: 700 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    cursor: pointer;
+  }
+  .uni-report-shell-panel {
+    position: fixed;
+    inset: 54px 0 auto;
+    display: none;
+    width: auto;
+    height: auto;
+    max-height: calc(100vh - 66px);
+    margin: 0 10px;
+    padding: 21px 20px 18px;
+    border: 1px solid var(--suite-rule);
+    border-top: 0;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 16px 34px var(--suite-shadow);
+  }
+  .uni-report-shell.open { height: 100vh; }
+  .uni-report-shell.open::before {
+    content: "";
+    position: fixed;
+    inset: 54px 0 0;
+    background: rgba(0, 0, 0, .28);
+  }
+  .uni-report-shell.open .uni-report-shell-panel { display: flex; }
+  .uni-report-shell-brand { display: none; }
+  .uni-report-shell-reports { grid-template-columns: repeat(3, 1fr); }
+  .uni-report-shell-sections ol { columns: 2; column-gap: 14px; }
+  .uni-report-shell-sections li { break-inside: avoid; }
+}
+@media (max-width: 520px) {
+  .uni-report-shell-sections ol { columns: 1; }
+}
+@media print {
+  body { padding-left: 0 !important; }
+  .uni-report-shell { display: none !important; }
+}
 </style>
 </head>
 <body>
-<details class="uni-report-switcher">
-  <summary>Reports · China</summary>
-  <div class="uni-report-switcher-menu" role="navigation" aria-label="University admission reports">
-<a href="../">Overview</a>
-<a href="./" aria-current="page">China</a>
-<a href="../usa/">United States</a>
-<a href="../vietnam/">Vietnam</a>
-<a href="../korea/">South Korea</a>
-<a href="../taiwan/">Taiwan</a>
+<aside class="uni-report-shell" aria-label="Report navigation">
+  <div class="uni-report-shell-mobile">
+    <a href="../">University ability · China</a>
+    <button class="uni-report-shell-menu" type="button" aria-expanded="false">Menu</button>
   </div>
-</details>
+  <div class="uni-report-shell-panel">
+    <a class="uni-report-shell-brand" href="../">
+      <span>University ability</span>
+      <strong>China</strong>
+      <em>Pooled exam percentiles</em>
+    </a>
+    <nav class="uni-report-shell-reports" aria-label="Country reports">
+      <a href="../">Overview</a>
+<a href="./" aria-current="page">China</a>
+<a href="../usa/">U.S.</a>
+<a href="../vietnam/">Vietnam</a>
+<a href="../korea/">Korea</a>
+<a href="../taiwan/">Taiwan</a>
+    </nav>
+    <nav class="uni-report-shell-sections" aria-label="On this page">
+      <span class="uni-report-shell-caption">On this page</span>
+      <ol><li><a href="#papers" class="on">Which paper they sat</a></li>
+<li><a href="#coverage">What the join reaches</a></li>
+<li><a href="#school">One school&#x27;s doors</a></li>
+<li><a href="#tail">Where a table stops</a></li>
+<li><a href="#seats">Who prices home</a></li>
+<li><a href="#spread">Same paper, different provinces</a></li>
+<li><a href="#routes">Which door, which student</a></li>
+<li><a href="#masters">Who may skip the exam</a></li></ol>
+    </nav>
+    <button class="uni-report-shell-theme" type="button">
+      <span data-theme-label>Dark theme</span>
+      <span class="uni-report-shell-theme-icon" aria-hidden="true"></span>
+    </button>
+  </div>
+</aside>
 <div class="shell">
 
 <nav>
@@ -1844,6 +2121,59 @@ addEventListener("load", redraw);
     row.append(yr, bar, total);
     mass.appendChild(row);
   });
+})();
+</script>
+<script id="uni-report-shell-script">
+(() => {
+  const shell = document.querySelector(".uni-report-shell");
+  if (!shell) return;
+  const root = document.documentElement;
+  const themeButton = shell.querySelector(".uni-report-shell-theme");
+  const themeLabel = shell.querySelector("[data-theme-label]");
+  const menuButton = shell.querySelector(".uni-report-shell-menu");
+  const nativeThemeButton = document.querySelector("body > .shell > nav #theme");
+
+  function remember(theme) {
+    try { localStorage.setItem("uni-report-theme", theme); } catch (_) {}
+  }
+  function syncTheme() {
+    const dark = root.dataset.theme === "dark";
+    themeLabel.textContent = dark ? "Light theme" : "Dark theme";
+    themeButton.setAttribute("aria-label", dark ? "Use light theme" : "Use dark theme");
+  }
+  themeButton.addEventListener("click", () => {
+    const next = root.dataset.theme === "dark" ? "light" : "dark";
+    if (nativeThemeButton) nativeThemeButton.click();
+    if (root.dataset.theme !== next) root.dataset.theme = next;
+    remember(next);
+    syncTheme();
+    window.dispatchEvent(new Event("resize"));
+  });
+  syncTheme();
+
+  function closeMenu() {
+    shell.classList.remove("open");
+    menuButton.setAttribute("aria-expanded", "false");
+  }
+  menuButton.addEventListener("click", () => {
+    const open = shell.classList.toggle("open");
+    menuButton.setAttribute("aria-expanded", String(open));
+  });
+  shell.querySelectorAll("a").forEach((link) => link.addEventListener("click", closeMenu));
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenu(); });
+
+  const links = [...shell.querySelectorAll(".uni-report-shell-sections a")];
+  const targets = links.map((link) => document.querySelector(link.getAttribute("href"))).filter(Boolean);
+  if (targets.length && "IntersectionObserver" in window) {
+    const activate = (id) => links.forEach((link) =>
+      link.classList.toggle("on", link.getAttribute("href") === "#" + id));
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter((entry) => entry.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (visible.length) activate(visible[0].target.id);
+    }, { rootMargin: "-15% 0px -70% 0px", threshold: 0 });
+    targets.forEach((target) => observer.observe(target));
+  }
 })();
 </script>
 </body>
