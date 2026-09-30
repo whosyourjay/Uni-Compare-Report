@@ -514,7 +514,7 @@ body > .shell > nav:first-child { display: none !important; }
     <p class="footnote history-guide">Click a line, point or school name to highlight it; click empty space or press Escape to show all again. Hover or focus a point for annual values. Dashed links span missing years.</p>
     <div id="school-history" class="chart"></div>
     <div id="history-schools" class="history-schools"></div>
-    <p class="footnote">U.S.: freshman scores, not the graduate-adjusted estimates above; ACT only before 2016, with Caltech scores unavailable after 2020. Medicine uses a fixed MCAT conversion (square points). Korea: school-record routes only. Vietnam: cutoff proxy, not an enrollee median (hollow dots). Thailand’s 2025 point covers COTMES programs only.</p>
+    <p class="footnote">U.S.: freshman scores, not the graduate-adjusted estimates above; ACT only before 2016, with Caltech scores unavailable after 2020. Medicine is shifted four years before medical entry to approximate undergraduate-entry cohorts; its MCAT conversion is fixed (square points). Korea: school-record routes only. Vietnam: cutoff proxy, not an enrollee median (hollow dots). Thailand’s 2025 point covers COTMES programs only.</p>
   </section>
 
   <section id="overview-elite">
@@ -1250,7 +1250,14 @@ function renderPoolRatio() {
 }
 
 function renderSchoolHistory() {
-  const rows = DATA.schoolHistory.rows;
+  // Align graduate-entry medicine with an assumed four-year undergraduate
+  // cohort. Keep source admission years intact in DATA and visible on hover.
+  const medicalLag = 4;
+  const rows = DATA.schoolHistory.rows.map(row => row.id !== "US-MD" ? row : {
+    ...row, measure: `MCAT estimate · medical entry −${medicalLag} years (assumed)`,
+    points: row.points.map(point => ({...point, year: point.year - medicalLag,
+                                     medicalEntryYear: point.year})),
+  });
   const section = $("#overview-school-history");
   const legend = $("#history-schools");
   legend.replaceChildren();
@@ -1265,6 +1272,7 @@ function renderSchoolHistory() {
     {key: "observedShare", format: value => `${(100 * value).toFixed(1)}% of seats have scored rows this year`},
     {key: "coverage", format: esc},
     {key: "mcat", format: value => `Median MCAT ${value}`},
+    {key: "medicalEntryYear", format: value => `Medical entry ${value}`},
   ];
   const varies = (row, key, format = value => value) => new Set(
     row.points.filter(point => point[key] !== undefined).map(point => format(point[key]))
@@ -1286,9 +1294,9 @@ function renderSchoolHistory() {
   svg.setAttribute("data-x-scale", "log-top-share");
   svg.setAttribute("data-y-scale", "year");
   svg.setAttribute("role", "group");
-  svg.setAttribute("aria-label", "Annual standing of fixed university leaders and the U.S. medical leader: logarithmic one-in-N rarity on the horizontal axis, admission year on the vertical axis");
+  svg.setAttribute("aria-label", "Annual standing of fixed university leaders and the U.S. medical leader: logarithmic one-in-N rarity on the horizontal axis, undergraduate-entry cohort or outcome year on the vertical axis; medicine assumes a four-year lag");
   addSvg(svg, "text", {x: box.left, y: 14, class: "plot-label"},
-         "admission / outcome year");
+         "undergraduate-entry cohort / outcome year");
   marks.filter(value => value >= low && value <= high).forEach(value => {
     addSvg(svg, "line", {x1: across(value), x2: across(value), y1: box.top,
                          y2: height - box.bottom, class: "grid"});
@@ -1330,7 +1338,7 @@ function renderSchoolHistory() {
     row.points.forEach((point, index) => {
       const previous = row.points[index - 1];
       const share = above(point.ability);
-      let description = `<b>${point.year}</b>`;
+      let description = `<b>${point.year}${point.medicalEntryYear ? " cohort" : ""}</b>`;
       if (abilityVaries) description += ` · ${odds(share)} stand above`
         + `<br>Percentile ${point.ability.toFixed(3)}`;
       if (previous && abilityVaries) description += `<br>Top-share ${(share / above(previous.ability)).toFixed(2)}× its ${previous.year} value`;
@@ -1344,7 +1352,9 @@ function renderSchoolHistory() {
                                         stroke: row.proxy ? colour : "var(--card)", "stroke-width": 1.5,
                                         class: "point", tabindex: 0,
                                         "data-year": point.year, "data-ability": point.ability,
-                                        "aria-label": `${row.name}, ${point.year}, ${odds(share)}, ${row.measure || "estimated ability"}`});
+                                        "aria-label": `${row.name}, ${point.year}`
+                                          + (point.medicalEntryYear ? ` cohort, medical entry ${point.medicalEntryYear}` : "")
+                                          + `, ${odds(share)}, ${row.measure || "estimated ability"}`});
       bindPopup(dot, description);
       dots.push(dot);
     });
