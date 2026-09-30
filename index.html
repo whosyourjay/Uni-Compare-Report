@@ -512,7 +512,7 @@ body > .shell > nav:first-child { display: none !important; }
         </select>
       </label>
     </div>
-    <p class="footnote history-guide">The same logarithmic “1 in N” ruler as Top universities: higher means fewer people stand above the estimate. Hover or focus a dot for its year and coverage. Dashed links span missing years; hollow dots mark Vietnam’s cutoff proxy, not an enrollee median.</p>
+    <p class="footnote history-guide">The same horizontal logarithmic “1 in N” ruler as Top universities: farther left means fewer people stand above the estimate. Years run upward from oldest to newest. Hover or focus a dot for its year and coverage. Dashed links span missing years; hollow dots mark Vietnam’s cutoff proxy, not an enrollee median.</p>
     <div id="school-history" class="chart"></div>
     <div id="history-schools" class="history-schools"></div>
     <details class="chart-notes"><summary>Selection, missing years and comparability</summary>
@@ -1259,6 +1259,16 @@ function renderSchoolHistory() {
   const selected = $("#history-country").value;
   const above = ability => Math.max(100 - ability, .01); // Same display floor as Top universities.
   const odds = share => `1 in ${fmt.format(Math.round(100 / share))}`;
+  const details = [
+    {key: "seats", format: value => `${fmt.format(Math.round(value))} represented students / seat weight`},
+    {key: "provinces", format: value => `${value} provinces represented`},
+    {key: "programs", format: value => `${value} programmes represented`},
+    {key: "observedShare", format: value => `${(100 * value).toFixed(1)}% of seats have scored rows this year`},
+    {key: "coverage", format: esc},
+  ];
+  const varies = (row, key, format = value => value) => new Set(
+    row.points.filter(point => point[key] !== undefined).map(point => format(point[key]))
+  ).size > 1;
   const all = rows.flatMap(row => row.points);
   const shares = all.map(point => above(point.ability));
   const marks = [.01, .02, .05, .1, .2, .5, 1, 2, 5, 10, 20, 50, 100];
@@ -1266,41 +1276,47 @@ function renderSchoolHistory() {
   const high = marks.find(value => value >= Math.max(...shares) * 1.15) || 100;
   const start = Math.min(...all.map(point => point.year));
   const end = Math.max(...all.map(point => point.year));
-  const width = 1010, height = 470;
-  const box = {left: 104, right: 112, top: 32, bottom: 46};
-  const across = year => scale(year, start - .3, end + .3, box.left, width - box.right);
-  const up = share => scale(Math.log10(share), Math.log10(low), Math.log10(high),
-                            box.top, height - box.bottom);
+  const width = 1010, height = 500;
+  const box = {left: 150, right: 70, top: 32, bottom: 50};
+  const across = share => scale(Math.log10(share), Math.log10(low), Math.log10(high),
+                                box.left, width - box.right);
+  const up = year => scale(year, start - .3, end + .3, height - box.bottom, box.top);
   const svg = svgFrame($("#school-history"), width, height);
   svg.setAttribute("data-scale", "log-top-share");
+  svg.setAttribute("data-x-scale", "log-top-share");
+  svg.setAttribute("data-y-scale", "year");
   svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label", "Annual standing of seven fixed university leaders, on a shared logarithmic one-in-N scale");
+  svg.setAttribute("aria-label", "Annual standing of seven fixed university leaders: logarithmic one-in-N rarity on the horizontal axis, admission year on the vertical axis");
   addSvg(svg, "text", {x: box.left, y: 14, class: "plot-label"},
-         "people standing above the estimate · logarithmic scale");
+         "admission / outcome year");
   marks.filter(value => value >= low && value <= high).forEach(value => {
-    addSvg(svg, "line", {x1: box.left, x2: width - box.right, y1: up(value), y2: up(value), class: "grid"});
-    addSvg(svg, "text", {x: box.left - 12, y: up(value) + 4, "text-anchor": "end", class: "tick"}, odds(value));
+    addSvg(svg, "line", {x1: across(value), x2: across(value), y1: box.top,
+                         y2: height - box.bottom, class: "grid"});
+    addSvg(svg, "text", {x: across(value), y: height - box.bottom + 22,
+                         "text-anchor": "middle", class: "tick"}, odds(value));
   });
   const years = [...new Set([start, ...ticks(start + 1, end - 2, 5), end])];
   years.forEach(year => {
-    addSvg(svg, "line", {x1: across(year), x2: across(year), y1: box.top,
-                         y2: height - box.bottom, class: "grid"});
-    addSvg(svg, "text", {x: across(year), y: height - box.bottom + 22,
-                         "text-anchor": "middle", class: "tick"}, year);
+    addSvg(svg, "line", {x1: box.left, x2: width - box.right, y1: up(year), y2: up(year), class: "grid"});
+    addSvg(svg, "text", {x: box.left - 12, y: up(year) + 4,
+                         "text-anchor": "end", class: "tick"}, year);
   });
   addSvg(svg, "text", {x: (box.left + width - box.right) / 2, y: height - 3,
-                       "text-anchor": "middle", class: "plot-label"}, "admission / outcome year");
+                       "text-anchor": "middle", class: "plot-label"},
+         "people standing above the estimate · logarithmic scale");
   const labels = [];
   // Draw a highlighted country last so overlapping dots remain accessible.
   [...rows].sort((a, b) => Number(a.code === selected) - Number(b.code === selected)).forEach(row => {
     const country = BY_CODE[row.code];
     const active = selected === "all" || selected === row.code;
+    const varyingDetails = details.filter(({key, format}) => varies(row, key, format));
+    const abilityVaries = varies(row, "ability");
     const group = addSvg(svg, "g", {"data-country": row.code, opacity: active ? 1 : .15});
     row.points.forEach((point, index) => {
       const previous = row.points[index - 1];
       if (previous) {
-        addSvg(group, "line", {x1: across(previous.year), x2: across(point.year),
-                             y1: up(above(previous.ability)), y2: up(above(point.ability)),
+        addSvg(group, "line", {x1: across(above(previous.ability)), x2: across(above(point.ability)),
+                             y1: up(previous.year), y2: up(point.year),
                              stroke: country.colour, "stroke-width": 2,
                              "stroke-dasharray": point.year - previous.year > 1 ? "4 4" : "none"});
       }
@@ -1308,16 +1324,14 @@ function renderSchoolHistory() {
     row.points.forEach((point, index) => {
       const previous = row.points[index - 1];
       const share = above(point.ability);
-      let description = `<b>${esc(row.name)}</b><br>${point.year} · ${odds(share)} stand above`
-        + `<br>${esc(row.measure || "Estimated enrollee ability")} · percentile ${point.ability.toFixed(3)}`;
-      if (previous) description += `<br>Top-share ${(share / above(previous.ability)).toFixed(2)}× its ${previous.year} value`;
-      description += `<br>All-year estimate: ${odds(above(row.reference))}`
-        + `<br>${fmt.format(Math.round(point.seats))} represented students / seat weight`;
-      if (point.provinces !== undefined) description += `<br>${point.provinces} provinces represented`;
-      if (point.programs !== undefined) description += `<br>${point.programs} programmes represented`;
-      if (point.observedShare !== undefined) description += `<br>${(100 * point.observedShare).toFixed(1)}% of seats have scored rows this year`;
-      if (point.coverage) description += `<br>${esc(point.coverage)}`;
-      const dot = addSvg(group, "circle", {cx: across(point.year), cy: up(share), r: 4,
+      let description = `<b>${point.year}</b>`;
+      if (abilityVaries) description += ` · ${odds(share)} stand above`
+        + `<br>Percentile ${point.ability.toFixed(3)}`;
+      if (previous && abilityVaries) description += `<br>Top-share ${(share / above(previous.ability)).toFixed(2)}× its ${previous.year} value`;
+      varyingDetails.forEach(({key, format}) => {
+        if (point[key] !== undefined) description += `<br>${format(point[key])}`;
+      });
+      const dot = addSvg(group, "circle", {cx: across(share), cy: up(point.year), r: 4,
                                         fill: row.proxy ? "var(--card)" : country.colour,
                                         stroke: row.proxy ? country.colour : "var(--card)", "stroke-width": 1.5,
                                         class: "point", tabindex: active ? 0 : -1,
@@ -1325,18 +1339,27 @@ function renderSchoolHistory() {
                                         "aria-label": `${row.name}, ${point.year}, ${odds(share)}, ${row.measure || "estimated ability"}`});
       bindPopup(dot, description);
     });
-    const last = row.points.at(-1);
-    if (active) labels.push({x: width - box.right + 12, y: up(above(last.ability)),
-                            name: country.name, colour: country.colour});
+    // The earliest observations are spread over the year axis; labelling
+    // these avoids crowding all seven names around the newest years.
+    const first = row.points[0];
+    if (active) labels.push({x: across(above(first.ability)) - 9, y: up(first.year) + 4,
+                             name: country.name, colour: country.colour});
   });
-  stackLabels(svg, labels, 16);
+  labels.forEach(label => addSvg(svg, "text", {x: label.x, y: label.y, "text-anchor": "end",
+    fill: label.colour, "font-size": 12, stroke: "var(--card)", "stroke-width": 3,
+    "paint-order": "stroke"}, label.name));
   $("#history-schools").innerHTML = rows.map(row => {
     const country = BY_CODE[row.code];
     const first = row.points[0], last = row.points.at(-1);
+    const fixedDetails = details.filter(({key, format}) => key !== "coverage"
+      && row.points.every(point => point[key] !== undefined) && !varies(row, key, format))
+      .map(({key, format}) => format(first[key]));
     return `<div data-country="${row.code}"><i class="dot" style="background:${country.colour}"></i>`
       + `<strong>${esc(country.name)}</strong> · ${esc(row.name)}`
       + `<span>${row.points.length} years · ${first.year}–${last.year}`
-      + (row.measure ? ` · ${esc(row.measure)}` : "") + "</span></div>";
+      + (row.measure ? ` · ${esc(row.measure)}` : "") + "</span>"
+      + `<span>All-year estimate: ${odds(above(row.reference))}`
+      + (fixedDetails.length ? ` · ${fixedDetails.join(" · ")} (fixed)` : "") + "</span></div>";
   }).join("");
   $("#history-notes").innerHTML = rows.map(row =>
     `<p><strong>${esc(BY_CODE[row.code].name)}.</strong> ${esc(row.note)}</p>`).join("");
